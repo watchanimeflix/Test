@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Guardians of Rokia - AnimeGold</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box }
+    body{ background:linear-gradient(-45deg,#1a0033,#2d0052,#0a0a2e,#16213e);background-size:400% 400%;animation:gradient 15s ease infinite;font-family:Arial,sans-serif;color:#fff;padding:20px;min-height:100vh;overflow-x:hidden }
+    @keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .container{max-width:900px;margin:0 auto}
+    h1{font-size:2.2rem;background:linear-gradient(135deg,#ff9800,#ffb84d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px}
+    .status-info{background:rgba(20,20,40,0.85);padding:14px;border-radius:10px;margin-bottom:18px;border:1px solid rgba(255,152,0,0.18)}
+    .player-section{background:rgba(20,20,40,0.9);padding:18px;border-radius:12px;margin-bottom:10px}
+    .video-placeholder{height:260px;background:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#ff9800;margin-bottom:12px;border:1px solid rgba(255,152,0,0.12)}
+    .stats{margin-bottom:12px;text-align:left;color:#ffb84d}
+    .controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    button{padding:10px 18px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#ff9800,#ffb84d);color:#000;font-weight:bold;transition:all 0.3s ease}
+    button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,152,0,0.5)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .progress-bar{height:8px;background:rgba(255,152,0,0.08);border-radius:4px;overflow:hidden;margin:12px 0}
+    .progress-fill{height:100%;background:linear-gradient(90deg,#ff9800,#ffb84d);width:0%}
+    .notification{position:fixed;top:18px;right:18px;background:#27ae60;padding:10px 14px;border-radius:8px;color:#fff;font-weight:700;z-index:10000}
+    .series-title{font-size:1.8rem;color:#ffb84d;margin-bottom:12px;font-weight:bold}
+    .status-badge{display:inline-block;padding:8px 15px;border-radius:20px;font-weight:bold;margin:10px 0;font-size:14px;animation:pulse 2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    .status-active{background:rgba(39,174,96,0.4);border:2px solid #27ae60;box-shadow:0 0 15px rgba(39,174,96,0.5);color:#27ae60}
+    .status-inactive{background:rgba(149,165,166,0.4);border:2px solid #95a5a6;box-shadow:0 0 15px rgba(149,165,166,0.3);color:#95a5a6}
+    .event-banner{background:rgba(255,152,0,0.2);border:2px solid #ff9800;padding:12px;border-radius:8px;margin:10px 0;text-align:center;color:#ffb84d;font-weight:bold}
+    
+    /* 🎉 BROADCAST ANNOUNCEMENT - TOP BANNER */
+    .broadcast-announcement {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      background: linear-gradient(90deg, #ff6b6b, #ffd93d, #ff9800);
+      border-bottom: 3px solid #fff;
+      padding: 20px 40px;
+      text-align: center;
+      z-index: 99999;
+      box-shadow: 0 4px 15px rgba(255, 100, 0, 0.8);
+      animation: slideDownFromTop 0.4s ease-out;
+    }
+
+    @keyframes slideDownFromTop {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .broadcast-announcement h2 {
+      color: #000;
+      font-size: 24px;
+      margin: 0 0 8px 0;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+    }
+
+    .broadcast-announcement p {
+      color: #000;
+      font-size: 16px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+
+    .broadcast-username {
+      color: #d63031;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .broadcast-amount {
+      color: #00b894;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+
+    .broadcast-emojis {
+      font-size: 28px;
+      animation: emojiFloat 2s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    @keyframes emojiFloat {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .confetti {
+      position: fixed;
+      pointer-events: none;
+      z-index: 99997;
+    }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, arrayUnion, increment, onSnapshot } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+    // Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+      measurementId: "G-J9LX9WMPJK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // State
+    let userRef = null;
+    let userData = {};
+    let isWatching = false;
+    let watchStartMs = 0;
+    let watchInterval = null;
+    let minuteCheckInterval = null;
+    let watchSeconds = 0;
+    let timeCheckInterval = null;
+    let isAdmin = false;
+    let isTransitioning = false;
+    let lastSessionId = null;
+    let completedMinutes = 0;
+    let lastMinuteSavedToDb = 0;
+    let activeEventMultiplier = 1;
+
+    let POINTS_PER_MINUTE = 0.0033;
+    const SERIES_NAME = 'Guardians of Rokia';
+    const AVAILABLE_HOURS = [4, 10, 16, 22];
+    const ADMIN_EMAIL = 'shadowtrimz@gmail.com';
+    const MIN_WATCH_MINUTES = 1;
+
+    // Utilities
+    function showNotification(msg, ms = 3000){ const n=document.createElement('div'); n.className='notification'; n.textContent=msg; document.body.appendChild(n); setTimeout(()=>n.remove(), ms); }
+
+    // 🎉 BROADCAST ANNOUNCEMENT FUNCTIONS
+    function showBroadcastAnnouncement(userName, amount) {
+      // Create announcement banner at top
+      const announcement = document.createElement('div');
+      announcement.className = 'broadcast-announcement';
+      announcement.innerHTML = `
+        <div class="broadcast-emojis">🎉🔥💰</div>
+        <h2>CONGRATULATIONS!</h2>
+        <p>
+          <span class="broadcast-username">${userName}</span>
+        </p>
+        <p>Just claimed <span class="broadcast-amount">₱${amount}</span></p>
+        <p>🏆 Amazing! 🏆</p>
+      `;
+
+      document.body.appendChild(announcement);
+
+      // Generate confetti
+      createConfetti();
+
+      // Remove after 5 seconds
+      setTimeout(() => {
+        announcement.style.animation = 'slideDownFromTop 0.4s ease-out reverse';
+        setTimeout(() => {
+          announcement.remove();
+        }, 400);
+      }, 5000);
+    }
+
+    function createConfetti() {
+      const confettiPieces = ['🎉', '🔥', '💰', '🏆', '⭐', '✨', '🎊'];
+      for (let i = 0; i < 30; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.textContent = confettiPieces[Math.floor(Math.random() * confettiPieces.length)];
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.top = Math.random() * 100 + '%';
+        confetti.style.fontSize = (Math.random() * 20 + 15) + 'px';
+        confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 5000);
+      }
+    }
+
+    // Add confetti animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fall {
+        to {
+          transform: translateY(100vh) rotate(360deg);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Listen for real-time claim announcements
+    function listenForAnnouncements() {
+      try {
+        const announcementsRef = collection(db, "claims");
+        const q = query(announcementsRef);
+        
+        let isFirst = true;
+        onSnapshot(q, (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added" && !isFirst) {
+              const data = change.doc.data();
+              showBroadcastAnnouncement(data.userName, data.amount);
+            }
+          });
+          if (isFirst) isFirst = false;
+        });
+      } catch (error) {
+        console.log("Announcements collection not ready yet");
+      }
+    }
+
+    // Check for active events and get multiplier
+    async function checkActiveEvent(){
+      try {
+        const snap = await getDocs(query(collection(db, 'events'), where('active', '==', true)));
+        const now = new Date();
+        
+        let multiplier = 1;
+        snap.forEach(doc => {
+          const data = doc.data();
+          const endTime = data.endTime ? new Date(data.endTime.toDate()) : null;
+          if(endTime && endTime > now){
+            multiplier = data.multiplier || 1;
+            console.log('Active event found:', { multiplier, description: data.description });
+          }
+        });
+        
+        activeEventMultiplier = multiplier;
+        if(multiplier > 1){
+          showNotification(`🎉 Event Active! ${multiplier}x Multiplier Applied!`);
+          const banner = document.getElementById('eventBanner');
+          if(banner) banner.style.display = 'block';
+        }
+        return multiplier;
+      } catch(e) {
+        console.warn('Error checking events:', e);
+        return 1;
+      }
+    }
+
+    // Update status badge
+    function updateStatusBadge(){
+      const badge = document.getElementById('statusBadge');
+      if(isWatching){
+        badge.className = 'status-badge status-active';
+        badge.textContent = '🟢 ACTIVE';
+      } else {
+        badge.className = 'status-badge status-inactive';
+        badge.textContent = '⚫ INACTIVE';
+      }
+    }
+
+    // Check if series is available (hidden time check) - admins bypass this
+    function isSeriesAvailable(){
+      if(isAdmin) return true;
+      const now = new Date();
+      const currentHour = now.getHours();
+      return AVAILABLE_HOURS.includes(currentHour);
+    }
+
+    // Force redirect if time is up (hidden) - admins bypass this
+    function startTimeCheck(){
+      if(isAdmin) return;
+      if(timeCheckInterval) clearInterval(timeCheckInterval);
+      timeCheckInterval = setInterval(()=>{
+        if(!isSeriesAvailable()){
+          if(isWatching) stopWatching();
+          showNotification('⏰ Series time ended - returning to earn page');
+          setTimeout(()=>{ window.location.href = 'earn.html'; }, 1000);
+        }
+      }, 1000);
+    }
+
+    // Try to embed exact URL first, then fall back to candidates
+    function tryEmbedAndPlay(){
+      const iframe = document.getElementById('episodeIframe');
+      const poster = document.getElementById('playerPoster');
+      const fallback = document.getElementById('iframeFallback');
+      const exact = `https://trimz.tv/guardians-of-rokia`;
+      const candidates = [ exact ];
+      let loaded = false; let t = 0;
+      const attempt = (src)=>{
+        console.log('Trying iframe src:', src);
+        if(!iframe || !poster || !fallback) return;
+        iframe.style.display = 'none'; poster.style.display = 'block'; fallback.style.display = 'none';
+        const onload = ()=>{ loaded = true; iframe.style.display='block'; poster.style.display='none'; try{ iframe.removeEventListener('load', onload); }catch(e){} showNotification('Embedded player loaded'); };
+        iframe.addEventListener('load', onload);
+        iframe.addEventListener('error', ()=>{ console.warn('iframe error for', src); });
+        try{ iframe.removeAttribute('sandbox'); }catch(e){}
+        iframe.src = src;
+        setTimeout(()=>{
+          if(loaded) return;
+          try{ iframe.removeEventListener('load', onload); }catch(e){}
+          t++;
+          if(t < candidates.length) { attempt(candidates[t]); return; }
+          fallback.style.display = 'block'; poster.style.display = 'block'; iframe.style.display = 'none';
+          showNotification('Embedding blocked or page not found in iframe — use browser to open');
+        },2500);
+      };
+      attempt(candidates[0]);
+    }
+
+    // Listen for series settings changes (live)
+    try{
+      const settingsRef = doc(db, 'seriesSettings', 'guardians-rokia');
+      onSnapshot(settingsRef, (snap)=>{
+        if(!snap.exists()) return;
+        const data = snap.data();
+        if(data && (typeof data.pointsPerMinute === 'number' || typeof data.pointsPerMinute === 'string')){
+          const v = Number(data.pointsPerMinute);
+          if(!isNaN(v)){
+            POINTS_PER_MINUTE = v;
+            const rateEl = document.getElementById('earningRate'); if(rateEl) rateEl.textContent = POINTS_PER_MINUTE.toFixed(4);
+            showNotification(`⚡ Earning rate updated to ${POINTS_PER_MINUTE.toFixed(4)} pts/min`);
+          }
+        }
+      });
+    }catch(e){ console.warn('series settings listener failed', e); }
+
+    // Start watching: earn only for COMPLETE minutes, update every minute
+    async function startWatching(){
+      // Prevent overlapping calls
+      if(isWatching || isTransitioning) return;
+      
+      isTransitioning = true;
+      setTimeout(()=>{ isTransitioning = false; }, 1000);
+
+      // Check for active events before starting
+      await checkActiveEvent();
+
+      // Clean up any existing intervals before starting
+      if (watchInterval) { clearInterval(watchInterval); watchInterval = null; }
+      if (minuteCheckInterval) { clearInterval(minuteCheckInterval); minuteCheckInterval = null; }
+
+      isWatching = true;
+      watchStartMs = Date.now();
+      lastSessionId = watchStartMs;
+      watchSeconds = 0;
+      completedMinutes = 0;
+      lastMinuteSavedToDb = 0;
+
+      tryEmbedAndPlay();
+
+      document.getElementById('playBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+      document.getElementById('currentPoints').textContent = '0.0000';
+      updateStatusBadge();
+
+      // UI update every second (progress bar only)
+      watchInterval = setInterval(()=>{
+        if(!isWatching) return;
+        watchSeconds = Math.floor((Date.now() - watchStartMs)/1000);
+        const minutes = watchSeconds/60;
+        document.getElementById('progressFill').style.width = Math.min((minutes/60)*100,100)+'%';
+      },1000);
+
+      // Check for completed minutes every second
+      minuteCheckInterval = setInterval(async ()=>{
+        if(!isWatching) return;
+        const elapsedMs = Date.now() - watchStartMs;
+        const newCompletedMinutes = Math.floor(elapsedMs / 60000);
+        
+        // If a new minute was completed
+        if(newCompletedMinutes > completedMinutes){
+          completedMinutes = newCompletedMinutes;
+          const pointsEarned = completedMinutes * POINTS_PER_MINUTE * activeEventMultiplier;
+          
+          // Update display
+          document.getElementById('currentPoints').textContent = pointsEarned.toFixed(4);
+          
+          // Save to database every minute (only if >= 1 minute)
+          if(completedMinutes >= MIN_WATCH_MINUTES && userRef && completedMinutes > lastMinuteSavedToDb){
+            lastMinuteSavedToDb = completedMinutes;
+            try{
+              await updateDoc(userRef, {
+                lastActivityTime: new Date().toISOString()
+              });
+            }catch(e){ console.error('minute update failed', e); }
+          }
+        }
+      }, 1000);
+    }
+
+    // Stop watching: calculate and save full session points only if >= 1 minute
+    async function stopWatching(){
+      // Prevent overlapping calls
+      if(!isWatching || isTransitioning) return;
+
+      isTransitioning = true;
+      setTimeout(()=>{ isTransitioning = false; }, 1000);
+
+      isWatching = false;
+      const currentSessionId = lastSessionId;
+      lastSessionId = null;
+
+      if(watchInterval){
+        clearInterval(watchInterval);
+        watchInterval = null;
+      }
+
+      if(minuteCheckInterval){
+        clearInterval(minuteCheckInterval);
+        minuteCheckInterval = null;
+      }
+
+      document.getElementById('playBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+      updateStatusBadge();
+
+      if(!watchStartMs || watchStartMs !== currentSessionId){
+        console.warn('Session mismatch or no active session', { watchStartMs, currentSessionId });
+        return;
+      }
+
+      const elapsedMs = Date.now() - watchStartMs;
+      const elapsedSec = Math.floor(elapsedMs/1000);
+      const finalMinutes = Math.floor(elapsedMs / 60000);
+      let pointsEarned = 0;
+
+      console.log('stopWatching debug', { watchStartMs, currentSessionId, elapsedMs, elapsedSec, finalMinutes, completedMinutes, multiplier: activeEventMultiplier });
+      
+      // Only earn points if watched >= 1 complete minute
+      if(finalMinutes >= MIN_WATCH_MINUTES){
+        pointsEarned = finalMinutes * POINTS_PER_MINUTE * activeEventMultiplier;
+        
+        if(!isFinite(pointsEarned) || pointsEarned < 0){
+          console.warn('Invalid pointsEarned, aborting save', pointsEarned);
+        } else {
+          const MAX_MINUTES_PER_SESSION = 24 * 60;
+          if(finalMinutes > MAX_MINUTES_PER_SESSION){
+            console.warn('Capping finalMinutes from', finalMinutes, 'to', MAX_MINUTES_PER_SESSION);
+            pointsEarned = MAX_MINUTES_PER_SESSION * POINTS_PER_MINUTE * activeEventMultiplier;
+          }
+
+          if(elapsedSec > 0 && userRef){
+            try{
+              console.log('Saving session:', { finalMinutes, pointsEarned, multiplier: activeEventMultiplier, sessionId: currentSessionId });
+              await updateDoc(userRef, {
+                watchSessions: arrayUnion({ series: SERIES_NAME, watchedMinutes: finalMinutes, pointsEarned: pointsEarned, timestamp: new Date().toISOString(), sessionId: currentSessionId, multiplier: activeEventMultiplier }),
+                totalPoints: increment(pointsEarned),
+                lastActivityTime: new Date().toISOString()
+              });
+
+              try{
+                const snap = await getDoc(userRef);
+                if(snap.exists()){
+                  const data = snap.data();
+                  console.log('User updated:', data);
+                  const el = document.getElementById('totalPoints');
+                  if(el && typeof data.totalPoints === 'number') el.textContent = data.totalPoints.toFixed(4);
+                }
+              }catch(readErr){ console.warn('Failed to read back user doc after update', readErr); }
+
+              const earnMsg = activeEventMultiplier > 1 ? `✅ Saved ${pointsEarned.toFixed(4)} points (${activeEventMultiplier}x event!)` : `✅ Saved ${pointsEarned.toFixed(4)} points`;
+              showNotification(earnMsg);
+            }catch(e){ console.error('save session failed', e); showNotification('⚠️ Failed to save session — check console for details'); }
+          } else if(elapsedSec > 0){
+            showNotification(`✅ Recorded ${pointsEarned.toFixed(4)} points (not saved - not signed in)`);
+          }
+        }
+      } else {
+        showNotification(`⏱️ Need to watch at least 1 minute to earn points`);
+      }
+
+      activeEventMultiplier = 1;
+      watchStartMs = 0;
+      watchSeconds = 0;
+      completedMinutes = 0;
+      lastMinuteSavedToDb = 0;
+      document.getElementById('currentPoints').textContent = '0.0000';
+      document.getElementById('progressFill').style.width = '0%';
+    }
+
+    // Auth and load user document. Attach realtime listener to update totalPoints
+    onAuthStateChanged(auth, async (u)=>{
+      if(!u){
+        document.getElementById('greeting').textContent = 'Hello, Guest!';
+        startTimeCheck();
+        updateStatusBadge();
+        await checkActiveEvent();
+        listenForAnnouncements();
+        return;
+      }
+
+      // Check if user is admin
+      isAdmin = (u.email === ADMIN_EMAIL);
+
+      const usersSnap = await getDocs(query(collection(db,'users'), where('uid','==', u.uid)));
+      if(usersSnap.empty){
+        const newDocRef = doc(collection(db,'users'));
+        await setDoc(newDocRef, { uid: u.uid, totalPoints: 0 });
+        userRef = newDocRef;
+        userData = { uid: u.uid, totalPoints: 0 };
+
+        onSnapshot(userRef, (snap)=>{
+          if(!snap.exists()) return;
+          const data = snap.data(); userData = data;
+          const total = (typeof data.totalPoints === 'number') ? data.totalPoints : 0;
+          const el = document.getElementById('totalPoints'); if(el) el.textContent = total.toFixed(4);
+        });
+      } else {
+        const d = usersSnap.docs[0]; userRef = doc(db,'users', d.id); userData = d.data();
+
+        onSnapshot(userRef, (snap)=>{
+          if(!snap.exists()) return;
+          const data = snap.data(); userData = data;
+          const total = (typeof data.totalPoints === 'number') ? data.totalPoints : 0;
+          const el = document.getElementById('totalPoints'); if(el) el.textContent = total.toFixed(4);
+        });
+      }
+
+      document.getElementById('greeting').textContent = `Hello, ${userData.userName || 'User'}!${isAdmin ? ' [ADMIN]' : ''}`;
+      startTimeCheck();
+      updateStatusBadge();
+      await checkActiveEvent();
+      listenForAnnouncements();
+    });
+
+    // Stop watching when user leaves the tab (visibilitychange event)
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.hidden && isWatching){
+        console.log('User switched tabs or minimized window - stopping watch session');
+        stopWatching();
+        showNotification('⚠️ Watch stopped - tab hidden');
+      }
+    });
+
+    // Stop watching when user closes the browser/tab (beforeunload event)
+    window.addEventListener('beforeunload', async (e)=>{
+      if(isWatching){
+        console.log('User closing browser/tab - stopping watch session');
+        await stopWatching();
+      }
+    });
+
+    window.startWatching = startWatching; window.stopWatching = stopWatching;
+
+    window.logout = ()=>{ if(isWatching) stopWatching(); if(timeCheckInterval) clearInterval(timeCheckInterval); signOut(auth).then(()=> window.location.href = 'index.html'); };
+
+    document.addEventListener('DOMContentLoaded', ()=>{ });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1 id="greeting">Loading...</h1>
+
+    <div id="eventBanner" class="event-banner" style="display:none">
+      🎉 MULTIPLIER EVENT ACTIVE! Earn more points now! 🎉
+    </div>
+
+    <div class="status-info">
+      <div id="statusBadge" class="status-badge status-inactive">⚫ INACTIVE</div>
+      <div>💰 Points Earned (session): <strong id="currentPoints">0.0000</strong></div>
+      <div>🏆 Total Points: <strong id="totalPoints">0.0000</strong></div>
+      <div>📊 Earning Rate: <strong id="earningRate">0.0033</strong> points/minute (0.198 points/hour)</div>
+    </div>
+
+    <div class="player-section">
+      <div class="series-title">📺 Guardians of Rokia</div>
+
+      <div id="playerPoster" class="video-placeholder">👁️ Player preview — click Play & Earn to start watching</div>
+
+      <div id="iframeFallback" style="display:none;color:#ffb84d;margin-bottom:8px">Embedding blocked — use browser to open</div>
+      <iframe id="episodeIframe" style="display:none;width:100%;height:260px;border-radius:8px;border:0;margin-bottom:12px" allow="autoplay; fullscreen" allowfullscreen></iframe>
+
+      <div class="stats">
+        <p>📍 <strong>Series:</strong> Guardians of Rokia</p>
+        <p>💎 <strong>Earned (session):</strong> <span id="currentPoints">0.0000</span> points</p>
+      </div>
+
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+
+      <div class="controls">
+        <button id="playBtn" onclick="startWatching()">▶️ Play & Earn</button>
+        <button id="stopBtn" onclick="stopWatching()" disabled>⏹️ Stop</button>
+        <button onclick="window.location.href='earn.html'">← Back to Series</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

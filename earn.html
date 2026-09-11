@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>Earn Points - AnimeGold</title>
+   <style>
+     * { margin: 0; padding: 0; box-sizing: border-box; }
+     
+     body {
+       background: linear-gradient(-45deg, #1a0033, #2d0052, #0a0a2e, #16213e);
+       background-size: 400% 400%;
+       animation: gradient 15s ease infinite;
+       font-family: 'Arial', sans-serif;
+       background-attachment: fixed;
+       color: #fff;
+       text-align: center;
+       min-height: 100vh;
+       overflow-x: hidden;
+     }
+
+     @keyframes gradient {
+       0% { background-position: 0% 50%; }
+       50% { background-position: 100% 50%; }
+       100% { background-position: 0% 50%; }
+     }
+
+     .container {
+       max-width: 1000px;
+       margin: 0 auto;
+       padding: 20px;
+       position: relative;
+       z-index: 1;
+     }
+
+     h1 {
+       font-size: 2em;
+       margin: 30px 0 10px 0;
+       background: linear-gradient(135deg, #ff9800, #ffb84d, #ff6b00);
+       -webkit-background-clip: text;
+       -webkit-text-fill-color: transparent;
+       background-clip: text;
+       animation: glow 2s ease-in-out infinite;
+     }
+
+     @keyframes glow {
+       0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 152, 0, 0.5)); }
+       50% { filter: drop-shadow(0 0 15px rgba(255, 152, 0, 0.8)); }
+     }
+
+     .section {
+       background: rgba(20, 20, 40, 0.85);
+       backdrop-filter: blur(10px);
+       border: 2px solid rgba(255, 152, 0, 0.3);
+       box-shadow: 0 8px 32px rgba(255, 152, 0, 0.2), 0 0 50px rgba(255, 152, 0, 0.1);
+       margin: 20px auto;
+       padding: 25px;
+       border-radius: 15px;
+       max-width: 900px;
+       animation: slideIn 0.6s ease-out;
+       position: relative;
+       z-index: 1;
+     }
+
+     @keyframes slideIn {
+       from {
+         opacity: 0;
+         transform: translateY(20px);
+       }
+       to {
+         opacity: 1;
+         transform: translateY(0);
+       }
+     }
+
+     .section h2 {
+       color: #ffb84d;
+       margin-bottom: 15px;
+       font-size: 1.4em;
+     }
+
+     .status-badge {
+       display: inline-block;
+       padding: 8px 15px;
+       border-radius: 20px;
+       font-weight: bold;
+       margin: 10px 0;
+       font-size: 14px;
+       animation: pulse 2s ease-in-out infinite;
+     }
+
+     @keyframes pulse {
+       0%, 100% { transform: scale(1); }
+       50% { transform: scale(1.05); }
+     }
+
+     .status-active {
+       background: rgba(39, 174, 96, 0.4);
+       border: 2px solid #27ae60;
+       box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+     }
+
+     .status-inactive {
+       background: rgba(149, 165, 166, 0.4);
+       border: 2px solid #95a5a6;
+       box-shadow: 0 0 15px rgba(149, 165, 166, 0.3);
+     }
+
+     .series-grid {
+       display: grid;
+       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+       gap: 20px;
+       margin-top: 20px;
+     }
+
+     .series-btn {
+       background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
+       border: 2px solid rgba(255, 152, 0, 0.3);
+       padding: 30px;
+       border-radius: 10px;
+       color: #ffb84d;
+       font-size: 18px;
+       font-weight: bold;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+       position: relative;
+     }
+
+     .series-btn:hover:not(.locked) {
+       transform: translateY(-5px);
+       box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+       border-color: #ff9800;
+       background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), rgba(255, 152, 0, 0.1));
+     }
+
+     .series-btn.locked {
+       opacity: 0.6;
+       cursor: not-allowed;
+       color: #95a5a6;
+       background: linear-gradient(135deg, rgba(149, 165, 166, 0.1), rgba(149, 165, 166, 0.05));
+       border-color: rgba(149, 165, 166, 0.3);
+     }
+
+     .series-btn.locked::after {
+       content: '🔒';
+       position: absolute;
+       font-size: 24px;
+       top: 5px;
+       right: 10px;
+     }
+
+     .series-btn.coming-soon {
+       opacity: 0.7;
+       cursor: default;
+       color: #ffd700;
+       background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+       border-color: rgba(255, 215, 0, 0.3);
+     }
+
+     .series-btn.coming-soon::after {
+       content: '✨';
+       position: absolute;
+       font-size: 24px;
+       top: 5px;
+       right: 10px;
+     }
+
+     .series-btn.coming-soon:hover {
+       transform: translateY(-5px);
+       box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+       border-color: #ffd700;
+       background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+     }
+
+     .series-time {
+       font-size: 12px;
+       color: #ff9800;
+       margin-top: 8px;
+       font-weight: normal;
+     }
+
+     .coming-soon-label {
+       font-size: 12px;
+       color: #ffd700;
+       margin-top: 8px;
+       font-weight: bold;
+       text-transform: uppercase;
+     }
+
+     .modal {
+       display: none;
+       position: fixed;
+       top: 0;
+       left: 0;
+       width: 100%;
+       height: 100%;
+       background: rgba(0, 0, 0, 0.9);
+       justify-content: center;
+       align-items: center;
+       z-index: 999;
+     }
+
+     .modal-content {
+       background: rgba(20, 20, 40, 0.95);
+       backdrop-filter: blur(10px);
+       border: 2px solid rgba(255, 152, 0, 0.3);
+       padding: 30px;
+       border-radius: 15px;
+       text-align: center;
+       width: 300px;
+       box-shadow: 0 0 50px rgba(255, 152, 0, 0.3);
+     }
+
+     .modal-content h2 {
+       margin-top: 0;
+       color: #ffb84d;
+       margin-bottom: 20px;
+     }
+
+     .modal-content p {
+       color: #b0b0ff;
+       margin: 15px 0;
+       font-size: 16px;
+     }
+
+     .modal-content button {
+       background: linear-gradient(135deg, #ff9800, #ffb84d);
+       border: none;
+       padding: 12px 30px;
+       border-radius: 8px;
+       color: #000;
+       font-weight: bold;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       margin-top: 20px;
+       font-size: 16px;
+     }
+
+     .modal-content button:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 6px 25px rgba(255, 152, 0, 0.6);
+     }
+
+     button.close-modal {
+       background: linear-gradient(135deg, #e74c3c, #c0392b);
+       color: #fff;
+     }
+
+     /* Reward Section Styles */
+     .reward-grid {
+       display: grid;
+       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+       gap: 15px;
+       margin-top: 20px;
+     }
+
+     /* DEFAULT DISABLED STATE */
+     .reward-card {
+       background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
+       border: 2px solid rgba(255, 152, 0, 0.3);
+       padding: 20px;
+       border-radius: 10px;
+       cursor: not-allowed;
+       transition: all 0.3s ease;
+       box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+       position: relative;
+       opacity: 0.6;
+       overflow: hidden;
+     }
+
+     /* 🔥 FIRE EFFECT - When eligible */
+     .reward-card.eligible {
+       cursor: pointer;
+       opacity: 1;
+       border-color: #ff4500;
+       background: linear-gradient(135deg, rgba(255, 69, 0, 0.15), rgba(255, 100, 0, 0.08));
+       box-shadow: 0 0 20px rgba(255, 69, 0, 0.6), inset 0 0 30px rgba(255, 140, 0, 0.2);
+       animation: fireIntensity 2s ease-in-out infinite;
+     }
+
+     @keyframes fireIntensity {
+       0%, 100% {
+         box-shadow: 0 0 15px rgba(255, 69, 0, 0.4), inset 0 0 20px rgba(255, 140, 0, 0.1);
+       }
+       50% {
+         box-shadow: 0 0 35px rgba(255, 69, 0, 0.8), inset 0 0 40px rgba(255, 140, 0, 0.3);
+       }
+     }
+
+     .reward-card.eligible:hover {
+       transform: translateY(-8px) scale(1.05);
+       box-shadow: 0 0 40px rgba(255, 69, 0, 1), 
+                   inset 0 0 50px rgba(255, 140, 0, 0.4);
+       border-color: #ff6347;
+     }
+
+     /* Moving fire border animation */
+     .reward-card.eligible::before {
+       content: '';
+       position: absolute;
+       top: 0;
+       left: 0;
+       right: 0;
+       bottom: 0;
+       border: 2px solid transparent;
+       border-radius: 10px;
+       background: linear-gradient(90deg, 
+         transparent, 
+         rgba(255, 69, 0, 0.8), 
+         rgba(255, 100, 0, 0.8), 
+         transparent) border-box;
+       -webkit-mask: linear-gradient(90deg, transparent, black, transparent);
+       animation: fireBorder 2s linear infinite;
+       pointer-events: none;
+     }
+
+     @keyframes fireBorder {
+       0% {
+         background-position: -100% center;
+       }
+       100% {
+         background-position: 100% center;
+       }
+     }
+
+     /* Floating fire particles */
+     .reward-card.eligible::after {
+       content: '🔥 🔥 🔥';
+       position: absolute;
+       top: 100%;
+       left: 0;
+       width: 100%;
+       font-size: 20px;
+       opacity: 0;
+       animation: fireRise 2s ease-in infinite;
+       text-align: center;
+       pointer-events: none;
+       letter-spacing: 10px;
+     }
+
+     @keyframes fireRise {
+       0% {
+         top: 100%;
+         opacity: 0;
+       }
+       10% {
+         opacity: 1;
+       }
+       90% {
+         opacity: 1;
+       }
+       100% {
+         top: -40px;
+         opacity: 0;
+         transform: translateX(20px);
+       }
+     }
+
+     .reward-amount {
+       font-size: 28px;
+       font-weight: bold;
+       color: #ffb84d;
+       margin-bottom: 5px;
+       position: relative;
+       z-index: 2;
+     }
+
+     .reward-card.eligible .reward-amount {
+       color: #ff6347;
+       animation: flamePulseText 1.2s ease-in-out infinite;
+       text-shadow: 0 0 15px rgba(255, 69, 0, 0.8), 0 0 30px rgba(255, 100, 0, 0.5);
+     }
+
+     @keyframes flamePulseText {
+       0%, 100% {
+         color: #ff6347;
+         text-shadow: 0 0 10px rgba(255, 69, 0, 0.6);
+         transform: scale(1);
+       }
+       50% {
+         color: #ff8c00;
+         text-shadow: 0 0 25px rgba(255, 140, 0, 1);
+         transform: scale(1.05);
+       }
+     }
+
+     .reward-label {
+       font-size: 12px;
+       color: #ff9800;
+       margin-bottom: 10px;
+       position: relative;
+       z-index: 2;
+     }
+
+     .reward-cost {
+       font-size: 14px;
+       color: #b0b0ff;
+       margin-bottom: 10px;
+       position: relative;
+       z-index: 2;
+     }
+
+     .claim-btn {
+       background: linear-gradient(135deg, #27ae60, #229954);
+       border: none;
+       padding: 8px 15px;
+       border-radius: 6px;
+       color: #fff;
+       font-weight: bold;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       font-size: 12px;
+       width: 100%;
+       position: relative;
+       z-index: 2;
+     }
+
+     .claim-btn:hover:not(:disabled) {
+       transform: translateY(-2px);
+       box-shadow: 0 4px 15px rgba(39, 174, 96, 0.6);
+     }
+
+     .claim-btn:disabled {
+       opacity: 0.5;
+       cursor: not-allowed;
+       background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+     }
+
+     .reward-card.eligible .claim-btn {
+       background: linear-gradient(135deg, #ff4500, #ff6347);
+       box-shadow: 0 0 15px rgba(255, 69, 0, 0.6);
+       animation: fireButtonPulse 1.5s ease-in-out infinite;
+     }
+
+     .reward-card.eligible .claim-btn:hover {
+       background: linear-gradient(135deg, #ff6347, #ff7f50);
+       box-shadow: 0 0 25px rgba(255, 69, 0, 0.9);
+       transform: translateY(-3px) scale(1.05);
+     }
+
+     @keyframes fireButtonPulse {
+       0%, 100% {
+         box-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+       }
+       50% {
+         box-shadow: 0 0 25px rgba(255, 100, 0, 0.8);
+       }
+     }
+
+     p {
+       color: #b0b0ff;
+       margin: 10px 0;
+     }
+
+     button {
+       margin: 8px 5px;
+       padding: 10px 20px;
+       background: linear-gradient(135deg, #ff9800, #ffb84d);
+       border: none;
+       border-radius: 8px;
+       color: #000;
+       font-weight: bold;
+       cursor: pointer;
+       transition: all 0.3s ease;
+       box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+     }
+
+     button:hover {
+       transform: translateY(-2px);
+       box-shadow: 0 6px 25px rgba(255, 152, 0, 0.6);
+     }
+
+     button.admin-btn {
+       background: linear-gradient(135deg, #c0392b, #e74c3c);
+       color: #fff;
+     }
+
+     button.admin-btn:hover {
+       box-shadow: 0 6px 25px rgba(192, 57, 43, 0.6);
+     }
+
+     .notification {
+       position: fixed;
+       top: 20px;
+       right: 20px;
+       background: #27ae60;
+       color: #fff;
+       padding: 15px 20px;
+       border-radius: 8px;
+       font-weight: bold;
+       z-index: 10000;
+       animation: slideInRight 0.3s ease;
+     }
+
+     @keyframes slideInRight {
+       from {
+         transform: translateX(400px);
+         opacity: 0;
+       }
+       to {
+         transform: translateX(0);
+         opacity: 1;
+       }
+     }
+
+     .notification.error {
+       background: #e74c3c;
+     }
+
+     /* 🎉 BROADCAST ANNOUNCEMENT - TOP BANNER */
+     .broadcast-announcement {
+       position: fixed;
+       top: 0;
+       left: 0;
+       right: 0;
+       width: 100%;
+       background: linear-gradient(90deg, #ff6b6b, #ffd93d, #ff9800);
+       border-bottom: 3px solid #fff;
+       padding: 20px 40px;
+       text-align: center;
+       z-index: 99999;
+       box-shadow: 0 4px 15px rgba(255, 100, 0, 0.8);
+       animation: slideDownFromTop 0.4s ease-out;
+     }
+
+     @keyframes slideDownFromTop {
+       from {
+         transform: translateY(-100%);
+         opacity: 0;
+       }
+       to {
+         transform: translateY(0);
+         opacity: 1;
+       }
+     }
+
+     .broadcast-announcement h2 {
+       color: #000;
+       font-size: 24px;
+       margin: 0 0 8px 0;
+       text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+     }
+
+     .broadcast-announcement p {
+       color: #000;
+       font-size: 16px;
+       font-weight: bold;
+       margin: 5px 0;
+     }
+
+     .broadcast-username {
+       color: #d63031;
+       font-size: 18px;
+       font-weight: bold;
+     }
+
+     .broadcast-amount {
+       color: #00b894;
+       font-size: 20px;
+       font-weight: bold;
+       margin: 5px 0;
+     }
+
+     .broadcast-emojis {
+       font-size: 28px;
+       animation: emojiFloat 2s ease-in-out infinite;
+       display: inline-block;
+     }
+
+     @keyframes emojiFloat {
+       0%, 100% {
+         transform: translateY(0);
+       }
+       50% {
+         transform: translateY(-8px);
+       }
+     }
+
+     .confetti {
+       position: fixed;
+       pointer-events: none;
+       z-index: 99997;
+     }
+   </style>
+   <script type="module">
+     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+     import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, onSnapshot, updateDoc, increment, addDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+     const firebaseConfig = {
+       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+       authDomain: "animegold-bf2a7.firebaseapp.com",
+       projectId: "animegold-bf2a7",
+       storageBucket: "animegold-bf2a7.firebasestorage.app",
+       messagingSenderId: "1055086176557",
+       appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+       measurementId: "G-J9LX9WMPJK"
+     };
+
+     const app = initializeApp(firebaseConfig);
+     const auth = getAuth(app);
+     const db = getFirestore(app);
+
+     let userRef, userData = {};
+     let isAdmin = false;
+     let currentUserName = "User";
+
+     const REWARDS = [
+       { amount: 100, cost: 100, label: '₱100' },
+       { amount: 200, cost: 200, label: '₱200' },
+       { amount: 500, cost: 500, label: '₱500' },
+       { amount: 1000, cost: 1000, label: '₱1,000' }
+     ];
+
+     // Only 8 unique series boxes
+     const SERIES_DATA = [
+       { name: 'System Analyzer', file: 'system-analyzer.html', episodes: 30, hours: [0, 6, 12, 18], comingSoon: false },
+       { name: 'The Gamer', file: 'the-gamer.html', episodes: 35, hours: [1, 7, 13, 19], comingSoon: false },
+       { name: '+99 Reinforced Wooden Stick', file: '99-reinforced-wooden-stick.html', episodes: 46, hours: [2, 8, 14, 20], comingSoon: false },
+       { name: 'Slam Jam', file: 'slam-jam.html', episodes: 38, hours: [3, 9, 15, 21], comingSoon: false },
+       { name: 'Guardians of Rokia', file: 'guardians-of-rokia.html', episodes: 42, hours: [4, 10, 16, 22], comingSoon: false },
+       { name: 'Life.exe', file: 'life-exe.html', episodes: 17, hours: [5, 11, 17, 23], comingSoon: false },
+       { name: 'Grimoire', file: 'grimoire.html', episodes: null, hours: [], comingSoon: true },
+       { name: 'Reincarnated as a Golden Slime', file: 'reincarnated-as-a-golden-slime.html', episodes: null, hours: [], comingSoon: true }
+     ];
+
+     function showNotification(msg, isError = false) {
+       const notif = document.createElement('div');
+       notif.className = isError ? 'notification error' : 'notification';
+       notif.textContent = msg;
+       document.body.appendChild(notif);
+       setTimeout(() => notif.remove(), 3000);
+     }
+
+     function showBroadcastAnnouncement(userName, amount, message = "Congratulations!") {
+       // Create announcement banner at top
+       const announcement = document.createElement('div');
+       announcement.className = 'broadcast-announcement';
+       announcement.innerHTML = `
+         <div class="broadcast-emojis">🎉🔥💰</div>
+         <h2>CONGRATULATIONS!</h2>
+         <p>
+           <span class="broadcast-username">${escapeHtml(userName)}</span>
+         </p>
+         <p>Just claimed <span class="broadcast-amount">₱${parseFloat(amount).toLocaleString()}</span></p>
+         <p>${escapeHtml(message)}</p>
+         <p>🏆 Amazing! 🏆</p>
+       `;
+
+       document.body.appendChild(announcement);
+
+       // Generate confetti
+       createConfetti();
+
+       // Remove after 5 seconds
+       setTimeout(() => {
+         announcement.style.animation = 'slideDownFromTop 0.4s ease-out reverse';
+         setTimeout(() => {
+           announcement.remove();
+         }, 400);
+       }, 5000);
+     }
+
+     function escapeHtml(text) {
+       const div = document.createElement('div');
+       div.textContent = text;
+       return div.innerHTML;
+     }
+
+     function createConfetti() {
+       const confettiPieces = ['🎉', '🔥', '💰', '🏆', '⭐', '✨', '🎊'];
+       for (let i = 0; i < 30; i++) {
+         const confetti = document.createElement('div');
+         confetti.className = 'confetti';
+         confetti.textContent = confettiPieces[Math.floor(Math.random() * confettiPieces.length)];
+         confetti.style.left = Math.random() * 100 + '%';
+         confetti.style.top = Math.random() * 100 + '%';
+         confetti.style.fontSize = (Math.random() * 20 + 15) + 'px';
+         confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+         document.body.appendChild(confetti);
+
+         setTimeout(() => confetti.remove(), 5000);
+       }
+     }
+
+     // Add confetti animation
+     const style = document.createElement('style');
+     style.textContent = `
+       @keyframes fall {
+         to {
+           transform: translateY(100vh) rotate(360deg);
+           opacity: 0;
+         }
+       }
+     `;
+     document.head.appendChild(style);
+
+     // Listen for real-time claim announcements AND admin broadcasts
+     function listenForAnnouncements() {
+       try {
+         // Listen for actual reward claims
+         const claimsRef = collection(db, "claims");
+         const q1 = query(claimsRef);
+         
+         let isFirstClaims = true;
+         onSnapshot(q1, (snapshot) => {
+           snapshot.docChanges().forEach((change) => {
+             if (change.type === "added" && !isFirstClaims) {
+               const data = change.doc.data();
+               showBroadcastAnnouncement(data.userName, data.amount);
+             }
+           });
+           if (isFirstClaims) isFirstClaims = false;
+         });
+
+         // Listen for admin broadcasts (real + fake)
+         const broadcastsRef = collection(db, "broadcasts");
+         const q2 = query(broadcastsRef);
+         
+         let isFirstBroadcasts = true;
+         onSnapshot(q2, (snapshot) => {
+           snapshot.docChanges().forEach((change) => {
+             if (change.type === "added" && !isFirstBroadcasts) {
+               const data = change.doc.data();
+               showBroadcastAnnouncement(data.userName, data.amount, data.message || "Congratulations!");
+             }
+           });
+           if (isFirstBroadcasts) isFirstBroadcasts = false;
+         });
+       } catch (error) {
+         console.log("Announcements collection not ready yet");
+       }
+     }
+
+     function isSeriesAvailableNow(hours) {
+       // Admin always has access
+       if (isAdmin) return true;
+       const now = new Date();
+       const currentHour = now.getHours();
+       return hours.includes(currentHour);
+     }
+
+     function getNextAvailableHour(hours) {
+       const now = new Date();
+       const currentHour = now.getHours();
+       
+       // Find next available hour
+       let nextHour = hours.find(h => h > currentHour);
+       if (!nextHour) nextHour = hours[0];
+       
+       return `${String(nextHour).padStart(2, '0')}:00`;
+     }
+
+     function hasPaymentMethodSetup() {
+       return userData.payoutMethod && userData.payoutNumber && userData.payoutName;
+     }
+
+     function createSeriesButtons() {
+       const grid = document.getElementById('seriesGrid');
+       grid.innerHTML = '';
+
+       SERIES_DATA.forEach((series) => {
+         const btn = document.createElement('button');
+         btn.className = 'series-btn';
+         
+         if (series.comingSoon) {
+           btn.classList.add('coming-soon');
+           btn.innerHTML = `
+             ${series.name}
+             <div class="coming-soon-label">🎬 Coming Soon</div>
+           `;
+           btn.onclick = () => {
+             window.location.href = series.file;
+           };
+         } else {
+           const available = isSeriesAvailableNow(series.hours);
+           if (!available) btn.classList.add('locked');
+
+           const hoursDisplay = series.hours.map(h => `${String(h).padStart(2, '0')}:00`).join(', ');
+           btn.innerHTML = `
+             ${series.name}
+             <div class="series-time">📺 ${series.episodes} episodes</div>
+             <div class="series-time">🕐 ${hoursDisplay}</div>
+           `;
+
+           btn.onclick = () => {
+             if (available) {
+               window.location.href = series.file;
+             } else {
+               showTimeModal(series.name, getNextAvailableHour(series.hours));
+             }
+           };
+         }
+
+         grid.appendChild(btn);
+       });
+     }
+
+     function createRewardCards() {
+       const grid = document.getElementById('rewardGrid');
+       grid.innerHTML = '';
+
+       const hasPaymentMethod = hasPaymentMethodSetup();
+       // Extract numeric value from "123.4567 points"
+       const pointsText = document.getElementById("points").textContent || "0";
+       const currentPoints = parseFloat(pointsText.split(" ")[0]) || 0;
+
+       REWARDS.forEach((reward) => {
+         const card = document.createElement('div');
+         card.className = 'reward-card';
+         const canClaim = currentPoints >= reward.cost && hasPaymentMethod;
+
+         // 🔥 ADD eligible CLASS when both conditions met
+         if (canClaim) {
+           card.classList.add('eligible');
+         }
+
+         card.innerHTML = `
+           <div class="reward-amount">${reward.label}</div>
+           <div class="reward-label">Reward</div>
+           <div class="reward-cost">Costs: ${reward.cost} pts</div>
+           <button class="claim-btn" onclick="claimReward(${reward.amount}, ${reward.cost})">
+             Claim
+           </button>
+         `;
+
+         // Make entire card clickable when eligible
+         if (canClaim) {
+           card.onclick = () => claimReward(reward.amount, reward.cost);
+         }
+
+         grid.appendChild(card);
+       });
+     }
+
+     window.claimReward = async (amount, cost) => {
+       if (!userRef) {
+         showNotification('Please log in first', true);
+         return;
+       }
+
+       // Check if payment method is setup
+       if (!hasPaymentMethodSetup()) {
+         showNotification('⚠️ Please setup your payment method first!', true);
+         setTimeout(() => {
+           window.location.href = 'payout.html';
+         }, 1500);
+         return;
+       }
+
+       try {
+         const userSnap = await getDoc(userRef);
+         if (!userSnap.exists()) {
+           showNotification('User not found', true);
+           return;
+         }
+
+         const user = userSnap.data();
+         const totalPoints = (typeof user.totalPoints === 'number') ? user.totalPoints : 0;
+
+         // ✅ PREVENT NEGATIVE POINTS - Ensure points can't go below 0
+         if (totalPoints < cost) {
+           showNotification(`Insufficient points! You need ${cost} points but only have ${totalPoints.toFixed(4)}`, true);
+           return;
+         }
+
+         // Deduct points and add to pending earnings
+         const newPoints = Math.max(0, totalPoints - cost);
+         await updateDoc(userRef, {
+           totalPoints: newPoints,
+           pendingEarnings: increment(amount),
+           lastActivityTime: new Date().toISOString()
+         });
+
+         // 📢 BROADCAST ANNOUNCEMENT TO ALL USERS
+         await addDoc(collection(db, "claims"), {
+           userName: currentUserName,
+           amount: amount,
+           timestamp: new Date().toISOString(),
+           uid: auth.currentUser.uid
+         });
+
+         showNotification(`✅ Successfully claimed ₱${amount}! (Deducted ${cost} points)`);
+         createRewardCards(); // Refresh reward cards
+       } catch (error) {
+         console.error('Claim error:', error);
+         showNotification('Failed to claim reward', true);
+       }
+     };
+
+     function showTimeModal(seriesName, nextAvailableTime) {
+       const modal = document.getElementById('timeModal');
+       document.getElementById('seriesNameDisplay').textContent = seriesName;
+       document.getElementById('availableTimeDisplay').textContent = nextAvailableTime;
+       modal.style.display = 'flex';
+     }
+
+     window.closeTimeModal = () => {
+       document.getElementById('timeModal').style.display = 'none';
+     };
+
+     window.logout = () => {
+       signOut(auth).then(() => window.location.href = "index.html");
+     };
+
+     onAuthStateChanged(auth, async (u) => {
+       if (u) {
+         console.log("User authenticated:", u.email);
+         
+         // Check if user is admin
+         isAdmin = (u.email === "shadowtrimz@gmail.com");
+
+         try {
+           // Try to find user by email (for auto-registered users)
+           const usersSnap = await getDocs(query(collection(db, "users"), where("email", "==", u.email)));
+           
+           if (!usersSnap.empty) {
+             console.log("Found user in Firestore by email");
+             const userDoc = usersSnap.docs[0];
+             userRef = doc(db, "users", userDoc.id);
+             userData = userDoc.data();
+             currentUserName = userData.username || userData.userName || "User";
+             
+             console.log("User data loaded:", currentUserName);
+
+             // Listen for announcements
+             listenForAnnouncements();
+
+             // Use realtime updates so total points reflect immediately when updated elsewhere
+             onSnapshot(userRef, (snap) => {
+               if (!snap.exists()) return;
+               userData = snap.data();
+               currentUserName = userData.username || userData.userName || "User";
+               document.getElementById("greeting").innerText = "Hello, " + (userData.username || userData.userName || "User") + (isAdmin ? " [ADMIN]" : "") + "!";
+               // Prefer totalPoints if present, otherwise fallback to legacy minuteCounter calculation
+               const totalPointsValue = (typeof userData.totalPoints === 'number') ? userData.totalPoints : ((userData.minuteCounter || 0) / 300);
+               // ✅ PREVENT NEGATIVE DISPLAY - Ensure points never show as negative
+               const displayPoints = Math.max(0, totalPointsValue || 0);
+               document.getElementById("points").innerText = displayPoints.toFixed(4) + " points";
+               document.getElementById("pending").innerText = userData.pendingEarnings || 0;
+               document.getElementById("total").innerText = userData.totalEarnings || 0;
+
+               if (isAdmin) {
+                 document.getElementById("adminBtn").style.display = "inline-block";
+               }
+
+               createSeriesButtons();
+               createRewardCards();
+             });
+
+             createSeriesButtons();
+             createRewardCards();
+             setInterval(createSeriesButtons, 60000); // Update every minute
+           } else {
+             console.log("User not found in Firestore by email:", u.email);
+             window.location.href = "index.html";
+           }
+         } catch (err) {
+           console.error("Error fetching user:", err);
+           window.location.href = "index.html";
+         }
+       } else {
+         console.log("No authenticated user");
+         window.location.href = "index.html";
+       }
+     });
+   </script>
+ </head>
+ <body>
+   <div class="container">
+     <h1 id="greeting">Loading...</h1>
+     
+     <div class="section">
+       <div id="statusBadge" class="status-badge status-inactive">⚫ INACTIVE</div>
+       <p>Total Points: <span id="points">0.0000 points</span></p>
+       <p>Pending Earnings: ₱<span id="pending">0</span></p>
+       <p>Total Earnings: ₱<span id="total">0</span></p>
+     </div>
+
+     <div class="section">
+       <h2>📺 Watch Series (24-Hour Rotating Schedule)</h2>
+       <p style="color: #ff9800; font-size: 14px;">🔓 Available NOW • 🔒 Locked • ✨ Coming Soon • Each series rotates 4 times daily</p>
+       <div class="series-grid" id="seriesGrid"></div>
+     </div>
+
+     <div class="section">
+       <h2>🎁 Redeem Your Earnings</h2>
+       <p style="color: #ff9800; font-size: 14px;">1 point = 1 peso • Select amount and claim your reward</p>
+       <div class="reward-grid" id="rewardGrid"></div>
+       <p style="font-size: 12px; margin-top: 15px; color: #ffb84d;">💡 Tip: Make sure to setup your payment method in Payout Info to claim rewards!</p>
+     </div>
+
+     <div class="section">
+       <button onclick="window.location.href='payout.html'">💳 Payout Info</button>
+       <button id="adminBtn" onclick="window.location.href='admin-panel.html'" class="admin-btn" style="display: none;">Admin Panel</button>
+       <button onclick="logout()">Logout</button>
+     </div>
+   </div>
+
+   <!-- Time Locked Modal -->
+   <div id="timeModal" class="modal">
+     <div class="modal-content">
+       <h2>⏰ Series Locked</h2>
+       <p>
+         <strong id="seriesNameDisplay">Series Name</strong>
+       </p>
+       <p>Next available at:</p>
+       <p style="color: #27ae60; font-size: 20px; font-weight: bold;">
+         🕐 <span id="availableTimeDisplay">--:--</span>
+       </p>
+       <p style="font-size: 12px;">Come back at the scheduled time to start earning!</p>
+       <button class="close-modal" onclick="closeTimeModal()">OK</button>
+     </div>
+   </div>
+ </body>
+</html>

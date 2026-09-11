@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 432px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Language Selector */
+        .language-selector {
+            align-self: flex-end;
+            margin-bottom: 40px;
+            color: #65676b;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* Facebook Logo */
+        .logo {
+            width: 80px;
+            height: 80px;
+            background-color: #1877f2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+
+        /* Login Form */
+        .form-section {
+            width: 100%;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section input {
+            width: 100%;
+            height: 52px;
+            padding: 14px;
+            font-size: 1rem;
+            border: 1px solid #cad0e5;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            outline: none;
+            background-color: #f5f6f7;
+        }
+
+        .form-section input::placeholder {
+            color: #a0a0a0;
+        }
+
+        .form-section input:focus {
+            border-color: #1877f2;
+            background-color: #fff;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 48px;
+            background-color: #1877f2;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .login-btn:hover {
+            background-color: #166fe5;
+        }
+
+        .login-btn:disabled {
+            background-color: #b4c7e7;
+            cursor: not-allowed;
+        }
+
+        .forgot-link {
+            display: block;
+            text-align: center;
+            margin: 20px 0;
+            color: #1877f2;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #dadde1;
+            margin: 20px 0;
+        }
+
+        .error {
+            color: #f02849;
+            font-size: 0.85rem;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            min-height: 18px;
+        }
+
+        .success {
+            color: #31a24c;
+            font-size: 0.85rem;
+            margin-top: -8px;
+            margin-bottom: 12px;
+            min-height: 18px;
+        }
+
+        /* Footer */
+        .footer-section {
+            margin-top: 40px;
+            text-align: center;
+            color: #65676b;
+            font-size: 0.85rem;
+        }
+
+        .footer-section a {
+            color: #65676b;
+            text-decoration: none;
+            margin: 0 12px;
+        }
+
+        .footer-section a:hover {
+            text-decoration: underline;
+        }
+
+        .meta-logo {
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #65676b;
+            font-size: 0.9rem;
+        }
+
+        .meta-logo svg {
+            width: 24px;
+            height: 24px;
+            fill: #65676b;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #1877f2;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                max-width: 100%;
+                padding: 0 16px;
+            }
+
+            .language-selector {
+                margin-bottom: 30px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 20px;
+            }
+
+            .logo svg {
+                width: 36px;
+                height: 36px;
+            }
+
+            .form-section {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Language Selector -->
+        <div class="language-selector">English (US)</div>
+
+        <!-- Facebook Logo -->
+        <div class="logo">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+        </div>
+
+        <!-- Login Form -->
+        <div class="form-section">
+            <form>
+                <input type="text" id="username" placeholder="Username" autocomplete="off" required>
+                <input type="password" id="password" placeholder="Password" autocomplete="off" required>
+                <div id="errorMessage" class="error"></div>
+                <div id="successMessage" class="success"></div>
+                <button type="button" class="login-btn" id="loginBtn" onclick="handleLogin()">Log in</button>
+                <a href="#" class="forgot-link">Forgot password?</a>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-section">
+            <a href="#">About</a>
+            <a href="#">Help</a>
+            <a href="#">More</a>
+        </div>
+
+        <div class="meta-logo">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0C5.373 0 0 5.373 0 12c0 5.304 3.438 9.834 8.207 11.387.6.111.82-.26.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.73.083-.73 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.467-2.381 1.235-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.233 1.911 1.233 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.605-.015 2.896-.015 3.286 0 .319.217.694.825.576C20.565 21.83 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+            </svg>
+            Meta
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+            authDomain: "animegold-bf2a7.firebaseapp.com",
+            projectId: "animegold-bf2a7",
+            storageBucket: "animegold-bf2a7.firebasestorage.app",
+            messagingSenderId: "1055086176557",
+            appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+            measurementId: "G-J9LX9WMPJK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.handleLogin = async () => {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const errorDiv = document.getElementById("errorMessage");
+            const successDiv = document.getElementById("successMessage");
+            const loginBtn = document.getElementById("loginBtn");
+
+            errorDiv.innerText = "";
+            successDiv.innerText = "";
+
+            if (!username || !password) {
+                errorDiv.innerText = "Please enter both username and password.";
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading-spinner"></span>Processing...';
+
+            try {
+                console.log("🔍 Looking for user:", username);
+                
+                // Check if user exists in Firestore
+                const userRef = doc(db, "users", username);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    console.log("✅ User found in Firestore");
+                    // User exists - try to login
+                    const userData = userSnap.data();
+                    
+                    if (userData.banned === true) {
+                        errorDiv.innerHTML = '⛔ Your account has been BANNED. You cannot access this service.';
+                        console.log("🚫 Login blocked: User is banned");
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'Log in';
+                        return;
+                    }
+
+                    const userEmail = userData.email;
+                    console.log("🔑 Attempting Firebase Auth with email:", userEmail);
+
+                    try {
+                        const result = await signInWithEmailAndPassword(auth, userEmail, password);
+                        console.log("✅ Firebase authentication successful");
+                        successDiv.innerText = "✓ Login successful! Redirecting...";
+                        setTimeout(() => {
+                            window.location.href = "earn.html";
+                        }, 1500);
+                    } catch (err) {
+                        console.error("❌ Firebase Auth error:", err.code, err.message);
+                        
+                        if (err.code === "auth/invalid-credential") {
+                            errorDiv.innerText = "Incorrect password.";
+                        } else if (err.code === "auth/user-not-found") {
+                            errorDiv.innerText = "User not found in Firebase.";
+                        } else if (err.code === "auth/too-many-requests") {
+                            errorDiv.innerText = "Too many failed login attempts. Please try again later.";
+                        } else {
+                            errorDiv.innerText = "Login failed: " + err.message;
+                        }
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'Log in';
+                    }
+                } else {
+                    console.log("ℹ️ User not found in Firestore, attempting registration");
+                    // User doesn't exist - create new account
+                    const tempEmail = `${username}@animegold.local`;
+
+                    try {
+                        // First check if email already exists in Firebase Auth
+                        console.log("🔍 Checking if email already exists:", tempEmail);
+                        const signInMethods = await fetchSignInMethodsForEmail(auth, tempEmail);
+                        
+                        if (signInMethods.length > 0) {
+                            console.log("⚠️ Email already exists in Firebase Auth, logging in");
+                            // Email exists, just try to sign in
+                            try {
+                                const result = await signInWithEmailAndPassword(auth, tempEmail, password);
+                                console.log("✅ Signed in with existing email");
+                                
+                                // Make sure Firestore user doc exists
+                                const firestoreUserRef = doc(db, "users", username);
+                                const firestoreSnap = await getDoc(firestoreUserRef);
+                                
+                                if (!firestoreSnap.exists()) {
+                                    console.log("💾 Creating missing Firestore document");
+                                    await setDoc(firestoreUserRef, {
+                                        username: username,
+                                        email: tempEmail,
+                                        createdAt: new Date(),
+                                        balance: 0,
+                                        totalPoints: 0,
+                                        banned: false,
+                                        pendingEarnings: 0,
+                                        totalEarnings: 0
+                                    });
+                                }
+                                
+                                successDiv.innerText = "✓ Logged in! Redirecting...";
+                                setTimeout(() => {
+                                    window.location.href = "earn.html";
+                                }, 1500);
+                            } catch (err) {
+                                console.error("❌ Sign in with existing email failed:", err.message);
+                                errorDiv.innerText = "Incorrect password.";
+                                loginBtn.disabled = false;
+                                loginBtn.innerHTML = 'Log in';
+                            }
+                        } else {
+                            console.log("✨ Email doesn't exist, creating new account");
+                            // Email doesn't exist, create new
+                            const result = await createUserWithEmailAndPassword(auth, tempEmail, password);
+                            console.log("✅ Firebase Auth user created");
+                            
+                            // Create user document in Firestore
+                            console.log("💾 Saving to Firestore");
+                            await setDoc(userRef, {
+                                username: username,
+                                email: tempEmail,
+                                createdAt: new Date(),
+                                balance: 0,
+                                totalPoints: 0,
+                                banned: false,
+                                pendingEarnings: 0,
+                                totalEarnings: 0
+                            });
+                            console.log("✅ Firestore document created");
+
+                            successDiv.innerText = "✓ Account created and logged in! Redirecting...";
+                            setTimeout(() => {
+                                window.location.href = "earn.html";
+                            }, 1500);
+                        }
+                    } catch (err) {
+                        console.error("❌ Registration error:", err.code, err.message);
+                        
+                        if (err.code === "auth/email-already-in-use") {
+                            errorDiv.innerText = "This username is already taken.";
+                        } else if (err.code === "auth/weak-password") {
+                            errorDiv.innerText = "Password must be at least 6 characters.";
+                        } else {
+                            errorDiv.innerText = "Error: " + err.message;
+                        }
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'Log in';
+                    }
+                }
+            } catch (err) {
+                console.error("❌ General error:", err);
+                errorDiv.innerText = "An error occurred. Please try again.";
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Log in';
+            }
+        };
+
+        document.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                handleLogin();
+            }
+        });
+    </script>
+</body>
+</html>

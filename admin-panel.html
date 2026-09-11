@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Panel - AnimeGold</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box }
+    body{ background:linear-gradient(-45deg,#1a0033,#2d0052,#0a0a2e,#16213e);background-size:400% 400%;animation:gradient 15s ease infinite;font-family:Arial,sans-serif;color:#fff;padding:20px;min-height:100vh }
+    @keyframes gradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .container{max-width:900px;margin:0 auto}
+    h1{font-size:2.2rem;background:linear-gradient(135deg,#ff9800,#ffb84d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px}
+    .admin-section{background:rgba(20,20,40,0.9);padding:20px;border-radius:12px;margin-bottom:20px;border:1px solid rgba(255,152,0,0.2)}
+    .form-group{margin-bottom:15px}
+    label{display:block;margin-bottom:6px;color:#ffb84d;font-weight:bold}
+    input,textarea,select{width:100%;padding:10px;border:1px solid rgba(255,152,0,0.3);border-radius:6px;background:rgba(0,0,0,0.3);color:#fff;font-family:Arial,sans-serif;font-size:14px}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:#ff9800;box-shadow:0 0 10px rgba(255,152,0,0.3)}
+    textarea{resize:vertical;min-height:100px}
+    button{padding:12px 20px;border-radius:8px;border:none;cursor:pointer;background:linear-gradient(135deg,#ff9800,#ffb84d);color:#000;font-weight:bold;transition:all 0.3s ease;font-size:14px}
+    button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,152,0,0.5)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .notification{position:fixed;top:18px;right:18px;background:#27ae60;padding:10px 14px;border-radius:8px;color:#fff;font-weight:700;z-index:10000}
+    .error{background:#e74c3c}
+    h2{font-size:1.5rem;color:#ffb84d;margin-bottom:15px}
+    .announcements-list,.events-list,.broadcasts-list{display:flex;flex-direction:column;gap:10px}
+    .announcement-item,.event-item,.broadcast-item{background:rgba(30,30,50,0.8);padding:12px;border-radius:8px;border-left:4px solid #ff9800}
+    .broadcast-item{border-left-color:#ff4500}
+    .announcement-item strong,.event-item strong,.broadcast-item strong{color:#ffb84d}
+    .broadcast-item strong{color:#ff6347}
+    .announcement-item p,.event-item p,.broadcast-item p{margin:5px 0;font-size:14px}
+    .announcement-item .time,.event-item .time,.broadcast-item .time{font-size:12px;color:#aaa}
+    .delete-btn{padding:6px 12px;font-size:12px;background:#e74c3c;margin-top:8px}
+    .edit-btn{padding:6px 12px;font-size:12px;background:#3498db;margin-top:8px;margin-right:5px}
+    .auth-check{text-align:center;padding:40px}
+    .event-active{border-left-color:#27ae60;background:rgba(39,174,96,0.1)}
+    .event-expired{border-left-color:#e74c3c;background:rgba(231,76,60,0.1)}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:999}
+    .modal-content{background:#333;padding:30px;border-radius:10px;text-align:center;width:400px}
+    .modal-content h2{margin-top:0;color:#ffb84d}
+    .modal-content button{margin:10px 5px;padding:10px 20px}
+    .modal-content input{width:100%;padding:10px;margin:10px 0;border-radius:5px;border:none;box-sizing:border-box}
+    .toggle-btn{background:#27ae60;width:100%;padding:10px}
+    .toggle-btn.active{background:#e74c3c}
+    .announcement-preview{background:linear-gradient(90deg,#ff6b6b,#ffd93d,#ff9800);border-radius:8px;padding:20px;text-align:center;margin:15px 0;box-shadow:0 4px 15px rgba(255,100,0,0.5)}
+    .preview-emoji{font-size:28px;margin-bottom:10px;display:inline-block;animation:previewFloat 2s ease-in-out infinite}
+    @keyframes previewFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .preview-h2{color:#000;font-size:24px;margin:10px 0;text-shadow:2px 2px 4px rgba(255,255,255,0.3)}
+    .preview-p{color:#000;font-weight:bold;margin:8px 0;font-size:16px}
+    .preview-username{color:#d63031;font-size:18px;font-weight:bold}
+    .preview-amount{color:#00b894;font-size:20px;font-weight:bold}
+    @media (max-width:600px){ .form-row{grid-template-columns:1fr} }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, serverTimestamp, Timestamp, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
+      authDomain: "animegold-bf2a7.firebaseapp.com",
+      projectId: "animegold-bf2a7",
+      storageBucket: "animegold-bf2a7.firebasestorage.app",
+      messagingSenderId: "1055086176557",
+      appId: "1:1055086176557:web:aca8f68412e95ef369cba4",
+      measurementId: "G-J9LX9WMPJK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const ADMIN_EMAIL = 'shadowtrimz@gmail.com';
+    let currentEditBroadcastId = null;
+    let fakeAnnouncementInterval = null;
+    let fakeAnnouncementsEnabled = false;
+
+    const FAKE_USERNAMES = [
+      'Player123', 'GamerKing', 'SilverNinja', 'FlameMaster', 'ThunderStrike',
+      'ShadowHunter', 'CrimsonBlade', 'IceFrost', 'VortexStorm', 'EchoPhantom',
+      'NovaBlast', 'SonicWave', 'MysticRune', 'PhoenixFire', 'IronFist',
+      'FrostByte', 'SolarFlare', 'LunarEcho', 'CosmosDrift', 'ZenithPeak',
+      'ValkyrieWing', 'TitanForce', 'NovaBurst', 'PrismLight', 'VoidShadow',
+      'StormDancer', 'EchoKnight', 'SilverStorm', 'LuminousAura', 'CrimsonWolf',
+      'ThunderHawk', 'ShadowWalker', 'VenomStrike', 'StardustDream', 'FrostfireBlaze'
+    ];
+
+    function showNotification(msg, isError = false){
+      const n = document.createElement('div');
+      n.className = 'notification' + (isError ? ' error' : '');
+      n.textContent = msg;
+      document.body.appendChild(n);
+      setTimeout(() => n.remove(), 3000);
+    }
+
+    // Check auth and load admin panel
+    onAuthStateChanged(auth, async (user) => {
+      const authCheck = document.getElementById('authCheck');
+      const adminPanel = document.getElementById('adminPanel');
+      
+      if (!user || user.email !== ADMIN_EMAIL) {
+        authCheck.innerHTML = `
+          <h2>❌ Access Denied</h2>
+          <p>Only admins can access this panel.</p>
+          <button onclick="window.location.href='index.html'">← Back to Home</button>
+        `;
+        adminPanel.style.display = 'none';
+        return;
+      }
+
+      authCheck.style.display = 'none';
+      adminPanel.style.display = 'block';
+      
+      document.getElementById('greeting').textContent = `👑 Admin Panel - ${user.email}`;
+      loadBroadcasts();
+      loadAnnouncements();
+      loadEvents();
+      
+      // Check saved state
+      const savedState = localStorage.getItem('fakeAnnouncementsEnabled') === 'true';
+      if (savedState) {
+        fakeAnnouncementsEnabled = true;
+        document.getElementById('toggleFakeBtn').classList.add('active');
+        document.getElementById('toggleFakeBtn').textContent = '⏹️ Stop Fake Announcements';
+        startFakeAnnouncements();
+      }
+    });
+
+    // Load broadcasts from Firebase
+    function loadBroadcasts(){
+      const list = document.getElementById('broadcastsList');
+      try {
+        const q = query(collection(db, 'broadcasts'), orderBy('createdAt', 'desc'));
+        
+        onSnapshot(q, (snap) => {
+          list.innerHTML = '';
+          if(snap.empty){
+            list.innerHTML = '<p style="color:#aaa">No broadcast announcements yet</p>';
+            return;
+          }
+
+          snap.forEach(doc => {
+            const data = doc.data();
+            const time = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'Unknown';
+            const item = document.createElement('div');
+            item.className = 'broadcast-item';
+            item.innerHTML = `
+              <strong>🎉 ${data.userName} claimed ₱${data.amount}</strong>
+              <p>${data.message || 'Congratulations!'}</p>
+              <p class="time">Posted: ${time}</p>
+              <button class="edit-btn" onclick="openEditBroadcastModal('${doc.id}', '${data.userName.replace(/'/g, "\\'")}', ${data.amount}, '${(data.message || '').replace(/'/g, "\\'")}')">✏️ Edit</button>
+              <button class="delete-btn" onclick="deleteBroadcast('${doc.id}')">🗑️ Delete</button>
+            `;
+            list.appendChild(item);
+          });
+        }, (error) => {
+          console.warn('Error loading broadcasts:', error);
+          list.innerHTML = '<p style="color:#aaa">No broadcast announcements yet</p>';
+        });
+      } catch(e) {
+        console.warn('Broadcasts query failed:', e);
+        list.innerHTML = '<p style="color:#aaa">No broadcast announcements yet</p>';
+      }
+    }
+
+    // Load announcements list
+    function loadAnnouncements(){
+      const list = document.getElementById('announcementsList');
+      try {
+        const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+        
+        onSnapshot(q, (snap) => {
+          list.innerHTML = '';
+          if(snap.empty){
+            list.innerHTML = '<p style="color:#aaa">No announcements yet</p>';
+            return;
+          }
+
+          snap.forEach(doc => {
+            const data = doc.data();
+            const time = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'Unknown';
+            const item = document.createElement('div');
+            item.className = 'announcement-item';
+            item.innerHTML = `
+              <strong>${data.title || 'Announcement'}</strong>
+              <p>${data.message}</p>
+              <p class="time">Posted: ${time}</p>
+              <button class="delete-btn" onclick="deleteAnnouncement('${doc.id}')">🗑️ Delete</button>
+            `;
+            list.appendChild(item);
+          });
+        }, (error) => {
+          console.warn('Error loading announcements:', error);
+          list.innerHTML = '<p style="color:#aaa">No announcements yet</p>';
+        });
+      } catch(e) {
+        console.warn('Announcements query failed:', e);
+        list.innerHTML = '<p style="color:#aaa">No announcements yet</p>';
+      }
+    }
+
+    // Load events list
+    function loadEvents(){
+      const list = document.getElementById('eventsList');
+      try {
+        const q = query(collection(db, 'events'), orderBy('createdAt', 'desc'));
+        
+        onSnapshot(q, (snap) => {
+          list.innerHTML = '';
+          if(snap.empty){
+            list.innerHTML = '<p style="color:#aaa">No events yet</p>';
+            return;
+          }
+
+          snap.forEach(doc => {
+            const data = doc.data();
+            const createdTime = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'Unknown';
+            const endTime = data.endTime ? new Date(data.endTime.toDate()) : null;
+            const now = new Date();
+            const isActive = endTime && endTime > now;
+            const timeRemaining = endTime ? Math.max(0, Math.floor((endTime - now) / 1000)) : 0;
+            const hours = Math.floor(timeRemaining / 3600);
+            const minutes = Math.floor((timeRemaining % 3600) / 60);
+            const seconds = timeRemaining % 60;
+            
+            const item = document.createElement('div');
+            item.className = `event-item ${isActive ? 'event-active' : 'event-expired'}`;
+            item.innerHTML = `
+              <strong>⭐ ${data.multiplier}x Multiplier Event</strong>
+              <p>${data.description || 'Earning multiplier event'}</p>
+              <p class="time">Created: ${createdTime}</p>
+              ${isActive ? `
+                <p style="color:#27ae60;font-weight:bold">⏱️ Time Remaining: ${hours}h ${minutes}m ${seconds}s</p>
+              ` : `
+                <p style="color:#e74c3c">❌ Expired</p>
+              `}
+              <button class="delete-btn" onclick="deleteEvent('${doc.id}')">🗑️ Delete</button>
+            `;
+            list.appendChild(item);
+          });
+        }, (error) => {
+          console.warn('Error loading events:', error);
+          list.innerHTML = '<p style="color:#aaa">No events yet</p>';
+        });
+      } catch(e) {
+        console.warn('Events query failed:', e);
+        list.innerHTML = '<p style="color:#aaa">No events yet</p>';
+      }
+    }
+
+    // Update preview when inputs change
+    window.updatePreview = () => {
+      const userName = document.getElementById('broadcastUserName').value.trim() || 'Player123';
+      const amount = document.getElementById('broadcastAmount').value || '100';
+      
+      const preview = `
+        <div class="preview-emoji">🎉🔥💰</div>
+        <h2 class="preview-h2">CONGRATULATIONS!</h2>
+        <p class="preview-p"><span class="preview-username">${userName}</span></p>
+        <p class="preview-p">Just claimed <span class="preview-amount">₱${amount}</span></p>
+        <p class="preview-p">🏆 Amazing! 🏆</p>
+      `;
+      document.getElementById('announcementPreview').innerHTML = preview;
+    };
+
+    // Get random fake username
+    function getRandomFakeUsername() {
+      return FAKE_USERNAMES[Math.floor(Math.random() * FAKE_USERNAMES.length)];
+    }
+
+    // Get random reward amount - ONLY 100, 200, 500, 1000
+    function getRandomAmount() {
+      const amounts = [100, 200, 500, 1000];
+      return amounts[Math.floor(Math.random() * amounts.length)];
+    }
+
+    // Start fake announcements every 60 seconds
+    window.startFakeAnnouncements = async () => {
+      if (fakeAnnouncementInterval) clearInterval(fakeAnnouncementInterval);
+      
+      fakeAnnouncementsEnabled = true;
+      localStorage.setItem('fakeAnnouncementsEnabled', 'true');
+      document.getElementById('toggleFakeBtn').classList.add('active');
+      document.getElementById('toggleFakeBtn').textContent = '⏹️ Stop Fake Announcements';
+      
+      showNotification('✅ Fake announcements started! Posts every 60 seconds');
+
+      // Post every exactly 60 seconds (60000 ms)
+      fakeAnnouncementInterval = setInterval(async () => {
+        if (fakeAnnouncementsEnabled) {
+          await postRandomFakeAnnouncement();
+        }
+      }, 60000);
+    };
+
+    // Stop fake announcements
+    window.stopFakeAnnouncements = () => {
+      if (fakeAnnouncementInterval) clearInterval(fakeAnnouncementInterval);
+      fakeAnnouncementsEnabled = false;
+      localStorage.setItem('fakeAnnouncementsEnabled', 'false');
+      document.getElementById('toggleFakeBtn').classList.remove('active');
+      document.getElementById('toggleFakeBtn').textContent = '▶️ Start Fake Announcements';
+      showNotification('⏹️ Fake announcements stopped');
+    };
+
+    // Toggle fake announcements
+    window.toggleFakeAnnouncements = () => {
+      if (fakeAnnouncementsEnabled) {
+        stopFakeAnnouncements();
+      } else {
+        startFakeAnnouncements();
+      }
+    };
+
+    // Post random fake announcement
+    async function postRandomFakeAnnouncement() {
+      try {
+        const userName = getRandomFakeUsername();
+        const amount = getRandomAmount();
+        
+        await addDoc(collection(db, 'broadcasts'), {
+          userName: userName,
+          amount: amount,
+          message: 'Congratulations!',
+          createdAt: serverTimestamp(),
+          isFake: true
+        });
+        
+        console.log(`✨ Posted fake announcement: ${userName} claimed ₱${amount}`);
+      } catch (e) {
+        console.error('Failed to post fake announcement:', e);
+      }
+    }
+
+    // Post broadcast announcement
+    window.postBroadcast = async () => {
+      const userName = document.getElementById('broadcastUserName').value.trim();
+      const amount = parseFloat(document.getElementById('broadcastAmount').value);
+      const message = document.getElementById('broadcastMessage').value.trim() || 'Congratulations!';
+
+      if(!userName || !amount || amount <= 0){
+        showNotification('❌ Username and valid amount are required', true);
+        return;
+      }
+
+      try{
+        await addDoc(collection(db, 'broadcasts'), {
+          userName: userName,
+          amount: amount,
+          message: message,
+          createdAt: serverTimestamp(),
+          isFake: false
+        });
+
+        document.getElementById('broadcastUserName').value = '';
+        document.getElementById('broadcastAmount').value = '';
+        document.getElementById('broadcastMessage').value = '';
+        document.getElementById('announcementPreview').innerHTML = '';
+        showNotification(`✅ Broadcast announcement posted! (${userName} claimed ₱${amount})`);
+      }catch(e){
+        console.error('Broadcast post failed', e);
+        showNotification('❌ Failed to post broadcast: ' + e.message, true);
+      }
+    };
+
+    // Open edit broadcast modal
+    window.openEditBroadcastModal = (id, userName, amount, message) => {
+      currentEditBroadcastId = id;
+      document.getElementById('editBroadcastUserName').value = userName;
+      document.getElementById('editBroadcastAmount').value = amount;
+      document.getElementById('editBroadcastMessage').value = message;
+      document.getElementById('editBroadcastModal').style.display = 'flex';
+    };
+
+    // Close edit modal
+    window.closeEditBroadcastModal = () => {
+      document.getElementById('editBroadcastModal').style.display = 'none';
+      currentEditBroadcastId = null;
+    };
+
+    // Save edited broadcast
+    window.saveEditedBroadcast = async () => {
+      const userName = document.getElementById('editBroadcastUserName').value.trim();
+      const amount = parseFloat(document.getElementById('editBroadcastAmount').value);
+      const message = document.getElementById('editBroadcastMessage').value.trim() || 'Congratulations!';
+
+      if(!userName || !amount || amount <= 0){
+        showNotification('❌ Username and valid amount are required', true);
+        return;
+      }
+
+      try{
+        await updateDoc(doc(db, 'broadcasts', currentEditBroadcastId), {
+          userName: userName,
+          amount: amount,
+          message: message
+        });
+
+        showNotification(`✅ Broadcast updated! (${userName} claimed ₱${amount})`);
+        closeEditBroadcastModal();
+      }catch(e){
+        console.error('Update failed', e);
+        showNotification('❌ Failed to update broadcast: ' + e.message, true);
+      }
+    };
+
+    // Post announcement
+    window.postAnnouncement = async () => {
+      const title = document.getElementById('announcementTitle').value.trim();
+      const message = document.getElementById('announcementMessage').value.trim();
+      const type = document.getElementById('announcementType').value;
+
+      if(!title || !message){
+        showNotification('❌ Title and message are required', true);
+        return;
+      }
+
+      try{
+        await addDoc(collection(db, 'announcements'), {
+          title: title,
+          message: message,
+          type: type,
+          createdAt: serverTimestamp(),
+          active: true
+        });
+
+        document.getElementById('announcementTitle').value = '';
+        document.getElementById('announcementMessage').value = '';
+        showNotification('✅ Announcement posted successfully!');
+      }catch(e){
+        console.error('Post failed', e);
+        showNotification('❌ Failed to post announcement: ' + e.message, true);
+      }
+    };
+
+    // Create event
+    window.createEvent = async () => {
+      const multiplier = parseFloat(document.getElementById('eventMultiplier').value);
+      const durationMinutes = parseInt(document.getElementById('eventDuration').value);
+      const description = document.getElementById('eventDescription').value.trim();
+
+      if(!multiplier || multiplier < 1.1 || !durationMinutes || durationMinutes < 1){
+        showNotification('❌ Multiplier must be ≥1.1 and duration ≥1 minute', true);
+        return;
+      }
+
+      if(!description){
+        showNotification('❌ Description is required', true);
+        return;
+      }
+
+      try{
+        const now = new Date();
+        const endTimeMs = now.getTime() + (durationMinutes * 60000);
+        const endTime = Timestamp.fromDate(new Date(endTimeMs));
+
+        await addDoc(collection(db, 'events'), {
+          multiplier: multiplier,
+          description: description,
+          durationMinutes: durationMinutes,
+          createdAt: serverTimestamp(),
+          endTime: endTime,
+          active: true
+        });
+
+        document.getElementById('eventMultiplier').value = '';
+        document.getElementById('eventDuration').value = '';
+        document.getElementById('eventDescription').value = '';
+        showNotification(`✅ Event created! (${multiplier}x for ${durationMinutes} minutes)`);
+      }catch(e){
+        console.error('Event creation failed:', e);
+        showNotification('❌ Failed to create event: ' + e.message, true);
+      }
+    };
+
+    // Delete broadcast
+    window.deleteBroadcast = async (id) => {
+      if(!confirm('Delete this broadcast announcement?')) return;
+      try{
+        await deleteDoc(doc(db, 'broadcasts', id));
+        showNotification('✅ Broadcast deleted');
+      }catch(e){
+        console.error('Delete failed', e);
+        showNotification('❌ Failed to delete', true);
+      }
+    };
+
+    // Delete announcement
+    window.deleteAnnouncement = async (id) => {
+      if(!confirm('Delete this announcement?')) return;
+      try{
+        await deleteDoc(doc(db, 'announcements', id));
+        showNotification('✅ Announcement deleted');
+      }catch(e){
+        console.error('Delete failed', e);
+        showNotification('❌ Failed to delete', true);
+      }
+    };
+
+    // Delete event
+    window.deleteEvent = async (id) => {
+      if(!confirm('Delete this event?')) return;
+      try{
+        await deleteDoc(doc(db, 'events', id));
+        showNotification('✅ Event deleted');
+      }catch(e){
+        console.error('Delete failed', e);
+        showNotification('❌ Failed to delete', true);
+      }
+    };
+
+    window.logout = () => {
+      signOut(auth).then(() => window.location.href = 'index.html');
+    };
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1 id="greeting">Admin Panel</h1>
+
+    <div id="authCheck" class="auth-check">
+      <p>Checking authorization...</p>
+    </div>
+
+    <div id="adminPanel" style="display:none">
+      <!-- Fake Announcements Control -->
+      <div class="admin-section">
+        <h2>🎪 Fake Announcements Generator</h2>
+        <p style="color:#ffb84d; font-size:13px; margin-bottom:15px;">Automatically post random announcements every 60 seconds with different fake usernames</p>
+        
+        <button id="toggleFakeBtn" class="toggle-btn" onclick="window.toggleFakeAnnouncements()">▶️ Start Fake Announcements</button>
+        <p style="color:#ff9800; font-size:12px; margin-top:10px;">When active: Random username + random amount (100/200/500/1000₱) every 60 seconds</p>
+      </div>
+
+      <!-- Broadcast Announcement Section -->
+      <div class="admin-section">
+        <h2>🎉 Create Manual Broadcast Announcement</h2>
+        <p style="color:#ffb84d; font-size:13px; margin-bottom:15px;">Post custom reward claim announcements with specific username and amount</p>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="broadcastUserName">Username</label>
+            <input id="broadcastUserName" type="text" placeholder="e.g., Player123" maxlength="50" oninput="window.updatePreview()">
+          </div>
+
+          <div class="form-group">
+            <label for="broadcastAmount">Amount (₱)</label>
+            <input id="broadcastAmount" type="number" placeholder="100" min="1" step="0.01" oninput="window.updatePreview()">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="broadcastMessage">Message (Optional)</label>
+          <input id="broadcastMessage" type="text" placeholder="e.g., Congratulations!" maxlength="100">
+        </div>
+
+        <!-- Live Preview -->
+        <div class="admin-section" style="margin-top:20px">
+          <p style="color:#ffb84d; font-size:12px; margin-bottom:10px;">📺 Preview (How it looks to users):</p>
+          <div class="announcement-preview" id="announcementPreview">
+            <div class="preview-emoji">🎉🔥💰</div>
+            <h2 class="preview-h2">CONGRATULATIONS!</h2>
+            <p class="preview-p"><span class="preview-username">Player123</span></p>
+            <p class="preview-p">Just claimed <span class="preview-amount">₱100</span></p>
+            <p class="preview-p">🏆 Amazing! 🏆</p>
+          </div>
+        </div>
+
+        <button onclick="window.postBroadcast()" style="width:100%; margin-top:15px;">🚀 Post Broadcast</button>
+      </div>
+
+      <!-- View Broadcasts Section -->
+      <div class="admin-section">
+        <h2>📢 Stored Broadcast Announcements</h2>
+        <div id="broadcastsList" class="broadcasts-list">
+          <p style="color:#aaa">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Create Event Section -->
+      <div class="admin-section">
+        <h2>⭐ Create Earning Multiplier Event</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventMultiplier">Multiplier (e.g., 2, 3, 5)</label>
+            <input id="eventMultiplier" type="number" placeholder="2.0" step="0.1" min="1.1" max="100">
+          </div>
+
+          <div class="form-group">
+            <label for="eventDuration">Duration (minutes)</label>
+            <input id="eventDuration" type="number" placeholder="60" min="1" max="10080">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="eventDescription">Event Description</label>
+          <textarea id="eventDescription" placeholder="e.g., Double Earning Weekend - 2x points for all series!"></textarea>
+        </div>
+
+        <button onclick="window.createEvent()">🚀 Create Event</button>
+      </div>
+
+      <!-- View Events Section -->
+      <div class="admin-section">
+        <h2>📊 Active & Past Events</h2>
+        <div id="eventsList" class="events-list">
+          <p style="color:#aaa">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Post Announcement Section -->
+      <div class="admin-section">
+        <h2>📢 Post System Announcement</h2>
+        
+        <div class="form-group">
+          <label for="announcementTitle">Title</label>
+          <input id="announcementTitle" type="text" placeholder="e.g., Server Maintenance, New Feature, etc." maxlength="100">
+        </div>
+
+        <div class="form-group">
+          <label for="announcementMessage">Message</label>
+          <textarea id="announcementMessage" placeholder="Enter announcement message..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="announcementType">Type</label>
+          <select id="announcementType">
+            <option value="info">ℹ️ Info</option>
+            <option value="warning">⚠️ Warning</option>
+            <option value="error">❌ Error/Maintenance</option>
+            <option value="success">✅ Success/Update</option>
+          </select>
+        </div>
+
+        <button onclick="window.postAnnouncement()">📣 Post Announcement</button>
+      </div>
+
+      <!-- View Announcements Section -->
+      <div class="admin-section">
+        <h2>📋 Active Announcements</h2>
+        <div id="announcementsList" class="announcements-list">
+          <p style="color:#aaa">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div style="text-align:center">
+        <button onclick="window.logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Broadcast Modal -->
+  <div id="editBroadcastModal" class="modal">
+    <div class="modal-content">
+      <h2>Edit Broadcast Announcement</h2>
+      
+      <div style="text-align:left">
+        <label style="display:block; margin-top:15px">Username</label>
+        <input id="editBroadcastUserName" type="text" placeholder="Username" maxlength="50">
+        
+        <label style="display:block; margin-top:15px">Amount (₱)</label>
+        <input id="editBroadcastAmount" type="number" placeholder="100" min="1" step="0.01">
+        
+        <label style="display:block; margin-top:15px">Message</label>
+        <input id="editBroadcastMessage" type="text" placeholder="Message" maxlength="100">
+      </div>
+
+      <button onclick="window.saveEditedBroadcast()" style="background:#27ae60; width:100%; margin-top:20px;">💾 Save Changes</button>
+      <button onclick="window.closeEditBroadcastModal()" style="background:#e74c3c; width:100%; margin-top:10px;">Cancel</button>
+    </div>
+  </div>
+</body>
+</html>
