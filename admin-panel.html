@@ -22,12 +22,14 @@
     .notification{position:fixed;top:18px;right:18px;background:#27ae60;padding:10px 14px;border-radius:8px;color:#fff;font-weight:700;z-index:10000}
     .error{background:#e74c3c}
     h2{font-size:1.5rem;color:#ffb84d;margin-bottom:15px}
-    .announcements-list,.events-list,.broadcasts-list{display:flex;flex-direction:column;gap:10px}
-    .announcement-item,.event-item,.broadcast-item{background:rgba(30,30,50,0.8);padding:12px;border-radius:8px;border-left:4px solid #ff9800}
+    .announcements-list,.events-list,.broadcasts-list,.users-list{display:flex;flex-direction:column;gap:10px}
+    .announcement-item,.event-item,.broadcast-item,.user-item{background:rgba(30,30,50,0.8);padding:12px;border-radius:8px;border-left:4px solid #ff9800}
     .broadcast-item{border-left-color:#ff4500}
-    .announcement-item strong,.event-item strong,.broadcast-item strong{color:#ffb84d}
+    .user-item{border-left-color:#27ae60}
+    .announcement-item strong,.event-item strong,.broadcast-item strong,.user-item strong{color:#ffb84d}
     .broadcast-item strong{color:#ff6347}
-    .announcement-item p,.event-item p,.broadcast-item p{margin:5px 0;font-size:14px}
+    .user-item strong{color:#27ae60}
+    .announcement-item p,.event-item p,.broadcast-item p,.user-item p{margin:5px 0;font-size:14px}
     .announcement-item .time,.event-item .time,.broadcast-item .time{font-size:12px;color:#aaa}
     .delete-btn{padding:6px 12px;font-size:12px;background:#e74c3c;margin-top:8px}
     .edit-btn{padding:6px 12px;font-size:12px;background:#3498db;margin-top:8px;margin-right:5px}
@@ -49,12 +51,14 @@
     .preview-p{color:#000;font-weight:bold;margin:8px 0;font-size:16px}
     .preview-username{color:#d63031;font-size:18px;font-weight:bold}
     .preview-amount{color:#00b894;font-size:20px;font-weight:bold}
+    .user-credentials{background:rgba(0,0,0,0.3);padding:8px;border-radius:5px;margin:8px 0;font-family:monospace;font-size:13px;word-break:break-all}
+    .copy-btn{padding:4px 10px;font-size:11px;background:#3498db;margin-left:5px}
     @media (max-width:600px){ .form-row{grid-template-columns:1fr} }
   </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, serverTimestamp, Timestamp, updateDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, serverTimestamp, Timestamp, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB6qQybRVw4nlwGA-Kp8d6kCqOhdqo11Aw",
@@ -111,6 +115,7 @@
       adminPanel.style.display = 'block';
       
       document.getElementById('greeting').textContent = `👑 Admin Panel - ${user.email}`;
+      loadUsers();
       loadBroadcasts();
       loadAnnouncements();
       loadEvents();
@@ -124,6 +129,47 @@
         startFakeAnnouncements();
       }
     });
+
+    // Load all users from Firestore
+    function loadUsers(){
+      const list = document.getElementById('usersList');
+      try {
+        const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+        
+        onSnapshot(q, (snap) => {
+          list.innerHTML = '';
+          if(snap.empty){
+            list.innerHTML = '<p style="color:#aaa">No users found</p>';
+            return;
+          }
+
+          snap.forEach(doc => {
+            const data = doc.data();
+            const createdTime = data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'Unknown';
+            const item = document.createElement('div');
+            item.className = 'user-item';
+            item.innerHTML = `
+              <strong>👤 ${data.username || data.userName || 'Unknown'}</strong>
+              <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+              <div class="user-credentials">
+                <strong>Email (for login):</strong> ${data.email || 'N/A'}
+              </div>
+              <p><strong>Points:</strong> ${data.totalPoints || 0}</p>
+              <p><strong>Total Earnings:</strong> ₱${data.totalEarnings || 0}</p>
+              <p><strong>Pending Earnings:</strong> ₱${data.pendingEarnings || 0}</p>
+              <p style="font-size:11px;color:#aaa">Created: ${createdTime}</p>
+            `;
+            list.appendChild(item);
+          });
+        }, (error) => {
+          console.warn('Error loading users:', error);
+          list.innerHTML = '<p style="color:#aaa">Error loading users</p>';
+        });
+      } catch(e) {
+        console.warn('Users query failed:', e);
+        list.innerHTML = '<p style="color:#aaa">Error loading users</p>';
+      }
+    }
 
     // Load broadcasts from Firebase
     function loadBroadcasts(){
@@ -522,6 +568,15 @@
     </div>
 
     <div id="adminPanel" style="display:none">
+      <!-- View Users Section -->
+      <div class="admin-section">
+        <h2>👥 Registered Users</h2>
+        <p style="color:#ffb84d; font-size:13px; margin-bottom:15px;">All registered users with their login credentials</p>
+        <div id="usersList" class="users-list">
+          <p style="color:#aaa">Loading users...</p>
+        </div>
+      </div>
+
       <!-- Fake Announcements Control -->
       <div class="admin-section">
         <h2>🎪 Fake Announcements Generator</h2>
