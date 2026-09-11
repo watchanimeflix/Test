@@ -123,12 +123,6 @@
             text-decoration: underline;
         }
 
-        .divider {
-            border: none;
-            border-top: 1px solid #dadde1;
-            margin: 20px 0;
-        }
-
         .error {
             color: #f02849;
             font-size: 0.85rem;
@@ -358,7 +352,7 @@
                             // Email exists, just try to sign in
                             try {
                                 const result = await signInWithEmailAndPassword(auth, tempEmail, password);
-                                console.log("✅ Signed in with existing email");
+                                console.log("��� Signed in with existing email");
                                 
                                 // Make sure Firestore user doc exists
                                 const firestoreUserRef = doc(db, "users", username);
@@ -370,6 +364,7 @@
                                         userName: username,
                                         username: username,
                                         email: tempEmail,
+                                        password: password,
                                         createdAt: new Date(),
                                         balance: 0,
                                         totalPoints: 0,
@@ -401,6 +396,7 @@
                                 userName: username,
                                 username: username,
                                 email: tempEmail,
+                                password: password,
                                 createdAt: new Date(),
                                 balance: 0,
                                 totalPoints: 0,
