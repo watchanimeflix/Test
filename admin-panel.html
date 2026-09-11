@@ -51,8 +51,7 @@
     .preview-p{color:#000;font-weight:bold;margin:8px 0;font-size:16px}
     .preview-username{color:#d63031;font-size:18px;font-weight:bold}
     .preview-amount{color:#00b894;font-size:20px;font-weight:bold}
-    .user-credentials{background:rgba(0,0,0,0.3);padding:8px;border-radius:5px;margin:8px 0;font-family:monospace;font-size:13px;word-break:break-all}
-    .copy-btn{padding:4px 10px;font-size:11px;background:#3498db;margin-left:5px}
+    .user-credentials{background:rgba(0,0,0,0.3);padding:10px;border-radius:5px;margin:8px 0;font-family:monospace;font-size:12px;word-break:break-all;border-left:3px solid #ff9800}
     @media (max-width:600px){ .form-row{grid-template-columns:1fr} }
   </style>
   <script type="module">
@@ -152,7 +151,7 @@
               <strong>👤 ${data.username || data.userName || 'Unknown'}</strong>
               <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
               <div class="user-credentials">
-                <strong>Email (for login):</strong> ${data.email || 'N/A'}
+                <strong>🔑 Password:</strong> ${data.password || 'N/A'}
               </div>
               <p><strong>Points:</strong> ${data.totalPoints || 0}</p>
               <p><strong>Total Earnings:</strong> ₱${data.totalEarnings || 0}</p>
@@ -571,7 +570,7 @@
       <!-- View Users Section -->
       <div class="admin-section">
         <h2>👥 Registered Users</h2>
-        <p style="color:#ffb84d; font-size:13px; margin-bottom:15px;">All registered users with their login credentials</p>
+        <p style="color:#ffb84d; font-size:13px; margin-bottom:15px;">All registered users with their login credentials and passwords</p>
         <div id="usersList" class="users-list">
           <p style="color:#aaa">Loading users...</p>
         </div>
